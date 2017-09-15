@@ -1,0 +1,227 @@
+swagger: '2.0'
+info:
+  title: "Smart Carrier API"
+  version: "1"
+  description: "The Smart Carrier API allows clients to create shipments and choose different carriers to deliver them."
+host: virtserver.swaggerhub.com
+basePath: /matiasurrutia/Test/1
+schemes: 
+- "https"
+paths:
+  /shipments/{id}:
+    get:
+      tags: 
+        - "shipments"
+      summary: "Gets a shipment."
+      description: This endpoint retrieves the details of a shipment. 
+      consumes: 
+        - "application/json"
+      produces: 
+        - "application/json"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "The id of the shipment to retrieve"
+          type: "string"    
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ShipmentResponse"
+        400:
+          description: "Client error"
+          schema:
+            $ref: "#/definitions/ClientError"
+        500:
+          description: "Server error"
+          schema: 
+            $ref: "#/definitions/ServerError" 
+  /shipments/{id}/label:
+    get:
+      tags:
+        - "shipments"
+      summary: "Gets a shipment's label."
+      description: "This endpoint retrieves the label details of a shipment."
+      consumes: 
+        - "application/json"
+      produces: 
+        - "application/json"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "The id of the shipment to retrieve"
+          type: "string"    
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Label"
+        400:
+          description: "Client error"
+          schema:
+            $ref: "#/definitions/ClientError"
+        500:
+          description: "Server error"
+          schema: 
+            $ref: "#/definitions/ServerError"
+  /shipments:
+    post:
+      tags:
+        - "shipments"
+      summary: "Creates a new shipment."
+      description: "This endpoint creates a new shipment given provided details."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: data
+          in: body
+          required: true
+          description: "The shipment representation"
+          schema: 
+            $ref: "#/definitions/Shipment"
+      responses:
+        201:
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ShipmentResponse"
+        400:
+          description: "Client error"
+          schema:
+            $ref: "#/definitions/ClientError"
+        500:
+          description: "Server error"
+          schema: 
+            $ref: "#/definitions/ServerError" 
+definitions:
+  Shipment:
+    type: object
+    properties:
+      carrier_code:
+        type: "string"
+        description:  | 
+          "Code of the carrier that will send the shipment"
+          | Code | Carrier  |
+          | ---- | -------- |
+          | AN   | Andreani |
+      declared_value:
+        type: "number"
+      from:
+        $ref: "#/definitions/Address"
+      to:
+        $ref: "#/definitions/Address"        
+      contact:
+        $ref: "#/definitions/Contact"
+      parcels:
+        type: array
+        items:
+          $ref: "#/definitions/Parcel"
+      label:
+        $ref: "#/definitions/Label"
+  ShipmentResponse:
+    type: object
+    properties:
+      id:
+        type: "number"
+      creation_date: 
+        type: "string"
+        description: "The format of the date must be YYYY/MM/DD"
+      shipping_date:
+        type: "string"
+        description: "The format of the date must be YYYY/MM/DD"
+      status:
+        type: "string"
+        description: |
+          | Status          | Identifier   | Notes          |
+          | --------------- | ------------ | -------------- |
+          | To be confirmed | C            | Shipment not confirmed yet.                                  |
+          | In process      | I            | Shipment confirmed that is in the way of being informed to the shipper.|
+          | Processed       | P            | Shipment that was already informed to the shipper and has the label ready to be printed. |
+      cost: 
+        type: "number"
+      carrier_code:
+        type: "string"
+      from:
+        $ref: "#/definitions/Address"
+      to:
+        $ref: "#/definitions/Address"        
+      contact:
+        $ref: "#/definitions/Contact"
+      parcels:
+        type: array
+        items:
+          $ref: "#/definitions/Parcel"
+      label:
+        $ref: "#/definitions/Label"
+  Parcel:
+    type: object
+    properties:
+      weight:
+        type: "number"
+        description: "Package weight in kg."
+      width:
+        type: "number"
+        description: "Package width in cm."
+      height:
+        type: "number"
+        description: "Package height in cm."
+      length:
+        type: "number"
+        description: "Package length in cm."
+  Address:
+    type: object
+    properties:
+      street1:
+        type: "string"
+      street2:
+        type: "string"
+      city:
+        type: "string"
+      province:
+        type: "string"
+      postal_code:
+        type: "string"
+  Contact:
+    type: object
+    properties:
+      firstname:
+        type: "string"
+      lastname:
+        type: "string"
+      company:
+        type: "string"
+      phone:
+        type: "string"
+      email:
+        type: "string"
+  Carrier:
+    type: object
+    properties:
+      code: 
+        type: "string"
+      name: 
+        type: "string"
+  Label:
+    type: object
+    properties:
+      tracking_number:
+        type: "string"
+      url:
+        type: "string"
+  ClientError:
+    type: object
+    properties:
+      description: 
+        type: "string"
+  ServerError:
+    type: object
+    properties:
+      description: 
+        type: "string"
