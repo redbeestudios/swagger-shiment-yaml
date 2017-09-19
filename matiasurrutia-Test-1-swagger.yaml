@@ -119,8 +119,6 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Parcel"
-      label:
-        $ref: "#/definitions/Label"
   ShipmentResponse:
     type: object
     properties:
@@ -172,6 +170,9 @@ definitions:
       length:
         type: "number"
         description: "Package length in cm."
+      description:
+        type: "string"
+        description: "Package description. It can be SKU, item's name, etc."  
   Address:
     type: object
     properties:
@@ -215,10 +216,30 @@ definitions:
   ClientError:
     type: object
     properties:
+      status:
+        type: "string"
+        description: "The HTTP status code."
+      title:
+        type: "string"
+        description: "The error title."
+      source:
+        type: "string"
+        description: "The object/parameter who orignated the error."
       description: 
         type: "string"
+        description: "Error description with information about how to recover from it."        
   ServerError:
     type: object
     properties:
+      status:
+        type: "string"
+        description: "The HTTP status code."
+      title:
+        type: "string"
+        description: "The error title."
+      source:
+        type: "string"
+        description: "The object/parameter who orignated the error."
       description: 
         type: "string"
+        description: "Error description with information about how to recover from it."
