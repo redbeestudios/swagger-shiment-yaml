@@ -1,12 +1,19 @@
 swagger: '2.0'
 info:
   title: "Smart Carrier API"
-  version: "1"
+  version: "2"
   description: "The Smart Carrier API allows clients to create shipments and choose different carriers to deliver them."
-host: virtserver.swaggerhub.com
-basePath: /matiasurrutia/Test/1
+host: smartcarrier.redbee.io
+basePath: /api
 schemes: 
 - "https"
+securityDefinitions:
+  APIKeyHeader:
+    type: apiKey
+    in: header
+    name: apiKey
+security: 
+  - APIKeyHeader: []
 paths:
   /shipments/{id}:
     get:
@@ -30,13 +37,11 @@ paths:
           schema:
             $ref: "#/definitions/ShipmentResponse"
         400:
-          description: "Client error"
-          schema:
-            $ref: "#/definitions/ClientError"
+          $ref: "#/responses/ClientError"
+        401:
+          $ref: "#/responses/UnauthorizedError"
         500:
-          description: "Server error"
-          schema: 
-            $ref: "#/definitions/ServerError" 
+          $ref: "#/responses/ServerError"
   /shipments/{id}/label:
     get:
       tags:
@@ -59,13 +64,11 @@ paths:
           schema:
               $ref: "#/definitions/Label"
         400:
-          description: "Client error"
-          schema:
-            $ref: "#/definitions/ClientError"
+          $ref: "#/responses/ClientError"
+        401:
+          $ref: "#/responses/UnauthorizedError"
         500:
-          description: "Server error"
-          schema: 
-            $ref: "#/definitions/ServerError"
+          $ref: "#/responses/ServerError"
   /shipments:
     post:
       tags:
@@ -82,23 +85,27 @@ paths:
           required: true
           description: "The shipment representation"
           schema: 
-            $ref: "#/definitions/Shipment"
+            $ref: "#/definitions/ShipmentRequest"
       responses:
         201:
           description: "OK"
           schema:
             $ref: "#/definitions/ShipmentResponse"
         400:
-          description: "Client error"
-          schema:
-            $ref: "#/definitions/ClientError"
+          $ref: "#/responses/ClientError"
+        401:
+          $ref: "#/responses/UnauthorizedError"
         500:
-          description: "Server error"
-          schema: 
-            $ref: "#/definitions/ServerError" 
+          $ref: "#/responses/ServerError"
 definitions:
-  Shipment:
+  ShipmentRequest:
     type: object
+    required: 
+      - carrier_code
+      - declared_value
+      - to
+      - contact
+      - parcels
     properties:
       carrier_code:
         type: "string"
@@ -109,14 +116,16 @@ definitions:
           | AN   | Andreani |
       declared_value:
         type: "number"
+        description: "Shipment's total declared value. For insurance purposes"
       from:
-        $ref: "#/definitions/Address"
+        $ref: "#/definitions/Provider"
       to:
         $ref: "#/definitions/Address"        
       contact:
         $ref: "#/definitions/Contact"
       parcels:
         type: array
+        minItems: 1
         items:
           $ref: "#/definitions/Parcel"
   ShipmentResponse:
@@ -124,6 +133,7 @@ definitions:
     properties:
       id:
         type: "number"
+        description: "Smart Carrier's identification number for the shipment"
       creation_date: 
         type: "string"
         description: "The format of the date must be YYYY/MM/DD"
@@ -133,18 +143,24 @@ definitions:
       status:
         type: "string"
         description: |
-          | Status          | Identifier   | Notes          |
-          | --------------- | ------------ | -------------- |
-          | To be confirmed | C            | Shipment created internally but not confirmed yet. |
-          | Processed       | P            | Shipment that was already informed to the carrier and has the label ready to be printed. |
-          | In transit       | I            | Shipment picked by carrier and in transit to destination. |          
-          | Delivered       | D            | Shipment delivered. |          
+          | Identifier   | Notes          |
+          | ------------ | -------------- |
+          | DRAFT            | Shipment created internally but not confirmed yet. |
+          | PROCESSED            | Shipment that was already informed to the carrier and has the label ready to be printed. |
+          | IN_TRANSIT            | Shipment picked by carrier and in transit to destination. |          
+          | DELIVERED            | Shipment delivered. |          
       cost: 
         type: "number"
+        description: "Shipment's total cost. For the case of Andreani, the cost of the shipments includes taxes (IVA)"
       carrier_code:
         type: "string"
+        description:  | 
+          "Code of the carrier that will send the shipment"
+          | Code | Carrier  |
+          | ---- | -------- |
+          | AN   | Andreani |
       from:
-        $ref: "#/definitions/Address"
+        $ref: "#/definitions/Provider"
       to:
         $ref: "#/definitions/Address"        
       contact:
@@ -157,10 +173,15 @@ definitions:
         $ref: "#/definitions/Label"
   Parcel:
     type: object
+    required:
+        - weight
+        - width
+        - height
+        - length
     properties:
       weight:
         type: "number"
-        description: "Package weight in kg."
+        description: "Package weight in gr."
       width:
         type: "number"
         description: "Package width in cm."
@@ -175,60 +196,103 @@ definitions:
         description: "Package description. It can be SKU, item's name, etc."  
   Address:
     type: object
+    required: 
+      - street_name
+      - street_number
+      - city
+      - province
+      - postal_code
     properties:
-      street1:
+      street_name:
         type: "string"
-      street2:
+        description: "Street address"
+      street_number:
         type: "string"
+        description: "Street number"
+      floor:
+        type: "string"
+        description: "Address's floor. Optional"
+      apartment:
+        type: "string"
+        description: "Address' apartment. Optional"
       city:
         type: "string"
+        description: "City"
       province:
         type: "string"
+        description: "Province"
       postal_code:
         type: "string"
+        description: "Postal code"
   Contact:
     type: object
+    required: 
+      - firstname
+      - lastname
+      - phone
+      - mobile
+      - email
     properties:
       firstname:
         type: "string"
+        description: "First name"
       lastname:
         type: "string"
+        description: "Last name"
+      personal_id:
+        type: "string"
+        description: "Person's identification number, such as DNI."
       company:
         type: "string"
       phone:
         type: "string"
+        description: "Home or company phone"
+      mobile:
+        type: "string"
+        description: "Mobile phone"
       email:
         type: "string"
+        description: "Personal or company email"
   Carrier:
     type: object
     properties:
       code: 
         type: "string"
+        description: "Carrier code"
       name: 
         type: "string"
+        description: "Carrier name"
   Label:
     type: object
     properties:
       tracking_number:
         type: "string"
-      url:
+        description: "Tracking number generated by carrier"
+      category:
         type: "string"
-  ClientError:
+        description: "Shipment category used. It could be standard or priority."
+      client_id:
+        type: "string"
+        description: "Client Id provided by Carrier."
+      contract_id:
+        type: "string"
+        description: "Contract Id provided by Carrier."      
+      pre_order_number:
+        type: "string"
+        description: "Pre-order number provided by Carrier."
+      distribution_branch:
+        type: "string"
+        description: "Distribution branch provided by Carrier."
+      accountability_branch:
+        type: "string"
+        description: "Accountability branch provided by Carrier."
+  Provider:
     type: object
     properties:
-      status:
-        type: "string"
-        description: "The HTTP status code."
-      title:
-        type: "string"
-        description: "The error title."
-      source:
-        type: "string"
-        description: "The object/parameter who orignated the error."
-      description: 
-        type: "string"
-        description: "Error description with information about how to recover from it."        
-  ServerError:
+      provider_id:
+        type: "integer"
+        description: "Provider ID of your internal systems in order to pass it to the Carrier, when applicable. For Andreani, this field is Required and the -to- address is not required."
+  Error:
     type: object
     properties:
       status:
@@ -243,3 +307,19 @@ definitions:
       description: 
         type: "string"
         description: "Error description with information about how to recover from it."
+responses:
+  UnauthorizedError:
+    description: API key is missing or invalid
+    headers:
+      WWW_Authenticate:
+        type: string
+    schema:
+      $ref: "#/definitions/Error"
+  ClientError:
+    description: "Client error"
+    schema:
+      $ref: "#/definitions/Error"
+  ServerError:
+    description: "Server error"
+    schema:
+      $ref: "#/definitions/Error"
