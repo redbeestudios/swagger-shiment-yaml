@@ -1,0 +1,741 @@
+openapi: 3.0.0
+info:
+  description: Insert shipment api description(¿and link to guide?)
+  version: Insert version
+  title: Shipment API
+  termsOfService: Insert terms of service
+  contact:
+    name: ContactName
+    url: www.contactURL.com
+    email: contactName@gmail.com
+  license:
+    name: Licencia Sarasa
+    url: www.urlLicenciaSarasa.com
+tags:
+  - name: shipment
+    description: Shipment Controller
+paths:
+  /shipments:
+    get:
+      tags:
+        - shipment
+      summary: Get Page of Shipments
+      description: "This endpoint retrieves information about shipments given a customer
+        id, a Pageable and a map: {carrier: value}."
+      operationId: shipmentsSearchUsingGET
+      parameters:
+        - name: apikey
+          in: header
+          description: Identifies a customer
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: carriers/parameters(???)
+          in: query
+          description: Contains pairs (carrier:value) used to retrieve a shipment
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+            items:
+              type: object
+              additionalProperties:
+                type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: pageNumber
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: paged
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: sort.sorted
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: sort.unsorted
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: unpaged
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Shipments successfully retrieved/OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Page_ShipmentResponse_"
+        "401":
+          description: No API key found in request
+        "403":
+          description: Invalid authentication credentials
+      deprecated: false
+    post:
+      tags:
+        - shipment
+      summary: Add a new shipment
+      description: This endpoint creates a new Shipment given a customer id and a
+        ShipmentRequest and if the shipment is successfully created, it returns
+        a ShipmentResponse.
+      operationId: shipmentsPostUsingPOST
+      parameters:
+        - name: apikey
+          in: header
+          description: Identifies a customer
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShipmentRequest"
+        description: Describes the shipment to be created
+        required: true
+      responses:
+        "200":
+          description: Shipment successfully created/OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShipmentResponse"
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShipmentResponse"
+        "401":
+          description: No API key found in request
+        "403":
+          description: Invalid authentication credentials
+        "500":
+          description: Invalid shipment object sent/No message available
+      deprecated: false
+  /shipments/refreshtracking:
+    patch:
+      tags:
+        - shipment
+      summary: Refresh all shipments status
+      description: This endpoint refreshes all shipments status that need to be
+        refreshed(¿Especificar condición de refresh?)
+      operationId: refreshTrackingUsingPATCH
+      responses:
+        "200":
+          description: All shipment trackings successfully refreshed/OK
+      deprecated: false
+  "/shipments/{id}":
+    get:
+      tags:
+        - shipment
+      summary: Get Shipment
+      description: This endpoint retrieves information about a specific shipment given a
+        customerId and a shipment id.The customer id must match the customer id
+        associated to the specified shipment.If the specified customer matches
+        the customer id associated to the shipment, the shipment tracking will
+        be refreshed and then the shipment will be returned.
+      operationId: shipmentsIdGetUsingGET
+      parameters:
+        - name: apikey
+          in: header
+          description: Identifies a customer
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: shipmentId
+          in: path
+          description: Identifies a shipment
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Shipments successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShipmentResponse"
+        "401":
+          description: No API key found in request
+        "403":
+          description: Invalid authentication credentials
+        "500":
+          description: The customer doesn't have access to this shipment
+      deprecated: false
+    delete:
+      tags:
+        - shipment
+      summary: Delete shipment
+      description: This endpoint deletes a specific shipment given a customer id and a
+        shipment id.The customer id must match the customer id associated to the
+        specified shipment.
+      operationId: shipmentsDeleteUsingDELETE
+      parameters:
+        - name: apikey
+          in: header
+          description: Identifies a customer
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: shipmentId
+          in: path
+          description: Identifies a shipment
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Shipments successfully deleted/OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShipmentResponse"
+        "401":
+          description: No API key found in request
+        "403":
+          description: Invalid authentication credentials
+        "500":
+          description: No value present/shipmentId doesn't exists)
+      deprecated: false
+  "/shipments/{id}/label":
+    get:
+      tags:
+        - shipment
+      summary: Get Label
+      description: This endpoint retrieves information about the label of a specific
+        shipment given a customer id and a shipment id,The customer id must
+        match the customer id associated to the specified shipment, only if the
+        values match a Label is retrieved.
+      operationId: shipmentsIdLabelGetUsingGET
+      parameters:
+        - name: apikey
+          in: header
+          description: Identifies a customer
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: shipmentId
+          in: path
+          description: Identifies a shipment
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Label successfully retrieved/OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Label"
+        "401":
+          description: No API key found in request
+        "403":
+          description: Invalid authentication credentials
+        "404":
+          description: No se encontro el envio (shipment not found, specified shipmentId
+            does not exists)
+        "500":
+          description: The customer does not have access to this shipment
+      deprecated: false
+  /shipmentsCsv:
+    get:
+      tags:
+        - shipment
+      summary: Get List of ShipmentResponses
+      description: "It works like GET /shipments but returns a List instead of a Page.This
+        endpoint retrieves a List of ShipmentResponses given a customer id and a
+        map of {carrier: value} used to produce an excel file with shipment
+        information."
+      operationId: shipmentsExportCsvUsingGET
+      parameters:
+        - name: apikey
+          in: header
+          description: Identifies a customer
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: carriers/parameters
+          in: query
+          description: "Contains pairs carrier: value used to retrieve a shipment"
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: string
+            items:
+              type: object
+              additionalProperties:
+                type: string
+      responses:
+        "200":
+          description: ShipmentResponses successfully retrieved/OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShipmentResponse"
+        "401":
+          description: No API key found in request
+        "403":
+          description: Invalid authentication credentials
+      deprecated: false
+  "/tracking/{id}":
+    get:
+      tags:
+        - shipment
+      summary: Get tracking events of a specific shipment
+      description: This endpoint retrieves all tracking events of a specific shipment given
+        a shipment id.
+      operationId: shipmentsIdGetUsingGET_1
+      parameters:
+        - name: shipmentId
+          in: path
+          description: Identifies a shipment
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Shipments successfully retrieved/OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrackingEvent"
+        "401":
+          description: No API key found in request
+        "404":
+          description: No se encontro el envio/Shipment not found, specified shipmentId
+            does not exists
+        "500":
+          description: Invalid shipmentId data type, shipmentId must be Long/integer($int64)
+      deprecated: false
+servers:
+  - url: http://https://api.test.krabpack.com/
+components:
+  schemas:
+    Address:
+      type: object
+      required:
+        - city
+        - postal_code
+        - province
+        - street_name
+        - street_number
+      properties:
+        apartment:
+          type: string
+          example: "null"
+          description: Apartment
+        city:
+          type: string
+          example: Capital Federal
+          description: City
+        floor:
+          type: string
+          example: "null"
+          description: Floor
+        postal_code:
+          type: string
+          example: 1414
+          description: Postal Code
+        province:
+          type: string
+          example: Buenos Aires
+          description: Province
+        street_name:
+          type: string
+          example: Ocampo
+          description: Street Name
+        street_number:
+          type: string
+          example: 1052
+          description: Street Number
+      title: Address
+      description: Description of shipment destination
+    Contact:
+      type: object
+      required:
+        - email
+        - firstname
+        - lastname
+        - personal_id
+        - phone
+      properties:
+        company:
+          type: string
+          example: Alpargatas Sociedad Anonima
+          description: Company name
+        email:
+          type: string
+          example: martin.britez@gmail.com
+          description: Contact email
+        firstname:
+          type: string
+          example: Martin
+          description: First name
+        lastname:
+          type: string
+          example: Britez
+          description: Last name
+        mobile:
+          type: string
+          example: 1166661592
+          description: Company mobile phone number or contact mobile phone number
+        personal_id:
+          type: string
+          example: 36822134
+          description: "Contact identification. Example: DNI, CUIL."
+        phone:
+          type: string
+          example: 131231231
+          description: Company phone number or contact phone number
+      title: Contact
+      description: Provides information about the receiver
+    Delivery:
+      type: object
+      required:
+        - carrier
+        - mode
+        - service
+      properties:
+        carrier:
+          type: string
+          example: ANDO
+          description: Carrier name
+        mode:
+          type: string
+          example: ADDRESS
+          description: "Possible values: {ADDRESS, STORE_TO_STORE, ???}. Nowadays only
+            ADDRESS is available for use."
+        service:
+          type: string
+          example: PRIORITY
+          description: "Service type. Values: {STANDARD, PRIORITY}. PRIORITY means thatthe
+            package must be delivered in less than 48 hours, while STANDARD
+            means thatit the shipping time can exceed 48 hours."
+      title: Delivery
+      description: Describes a specific delivery
+    Label:
+      type: object
+      required:
+        - label_url
+        - tracking_number
+      properties:
+        label_url:
+          type: string
+          example: http://api.test.krabpack.com/labels/printLabel/6
+          description: "Label url provided by carrier used to access shipment tracking "
+        tracking_number:
+          type: string
+          example: 14670
+          description: Shipment tracking number generated by carrier(¿como funca esto?)
+      title: Label
+      description: Describes the label of a product that is being shipped
+    Pageable:
+      type: object
+      properties:
+        offset:
+          type: integer
+          format: int64
+        pageNumber:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        paged:
+          type: boolean
+        sort:
+          $ref: "#/components/schemas/Sort"
+        unpaged:
+          type: boolean
+      title: Pageable
+    Parcel:
+      type: object
+      required:
+        - height
+        - length
+        - weight
+        - width
+      properties:
+        description:
+          type: string
+          example: Choripanes con conservantes
+          description: Package description
+        height:
+          type: number
+          example: 49
+          description: Package height in cm.
+        length:
+          type: number
+          example: 31
+          description: Package length in cm.
+        weight:
+          type: number
+          example: 5
+          description: Package weight in gr.
+        width:
+          type: number
+          example: 31
+          description: Package width in cm.
+      title: Parcel
+      description: Describes a package that a carrier ships. Shipping price depends of
+        weight, width, height and length.
+    Provider:
+      type: object
+      required:
+        - warehouse_id
+      properties:
+        warehouse_id:
+          type: string
+          example: kp-viamo-bulnes-001
+          description: Warehouse id. (¿explicar que es?)
+      title: Provider
+      description: Describes location where the carrier gets the product
+    RecommnedationResponse:
+      type: object
+      properties:
+        carrier_cost:
+          type: number
+          description: Carrier cost. Depends on weight, height, width and length of
+            package. Each carrier has its own way of calculating carrier_cost.
+        cost:
+          type: number
+          description: "Total cost of shipping. It is composed of: {Carrier cost, Krabpack
+            fee, ?}"
+        sla:
+          type: string
+          description: SLA
+      title: RecommnedationResponse
+      description: Recommender response that describes a delivery and its cost. It is used
+        to obtain the most cost efficient carrier.
+    ShipmentRequest:
+      type: object
+      required:
+        - contact
+        - declared_value
+        - delivery
+        - from
+        - parcels
+        - reference_id
+        - to
+      properties:
+        contact:
+          $ref: "#/components/schemas/Contact"
+        created_by:
+          type: string
+          example: JP
+          description: User name
+        declared_value:
+          type: number
+          example: 40
+          description: Total shipment price
+        delivery:
+          $ref: "#/components/schemas/Delivery"
+        from:
+          $ref: "#/components/schemas/Provider"
+        parcels:
+          type: array
+          description: List of Parcels, each of one describes a package
+          items:
+            $ref: "#/components/schemas/Parcel"
+        reference_id:
+          type: string
+          example: 4567
+          description: Shipment reference id for OPERADORES LOGISTICOS
+        to:
+          $ref: "#/components/schemas/Address"
+      title: ShipmentRequest
+      description: Description of a specific shipment. This specific Shipment class is used
+        to create new shipments
+    ShipmentResponse:
+      type: object
+      required:
+        - contact
+        - delivery
+        - from
+        - id
+        - label
+        - parcels
+        - reference_id
+        - status
+        - status_changed_date
+        - to
+        - tracking
+      properties:
+        contact:
+          $ref: "#/components/schemas/Contact"
+        cost:
+          type: number
+          example: 184
+          description: "Shipment total cost. Cost is composed of: {}"
+        created_by:
+          type: string
+          description: User name
+        creation_date:
+          type: string
+          format: date-time
+          example: 2019-01-22T12:30:38.400Z,2019-01-22T14:30:38.400Z
+          description: "Shipment creation date. Format: YYYY-MM-DDTHH:MM:SSZ???"
+        delivery:
+          $ref: "#/components/schemas/Delivery"
+        from:
+          $ref: "#/components/schemas/Provider"
+        id:
+          type: integer
+          format: int64
+          example: 123
+          description: Shipment id
+        label:
+          $ref: "#/components/schemas/Label"
+        parcels:
+          type: array
+          description: List of Parcels, each of one describes a package
+          items:
+            $ref: "#/components/schemas/Parcel"
+        reference_id:
+          type: string
+          example: 4567
+          description: Shipment reference id
+        shipment_date:
+          type: string
+          description: Date when shipment started.
+        status:
+          type: string
+          example: IN_TRANSIT
+          description: "| Identifier   | Notes          | | ------------ | -------------- |
+            | DRAFT            | Shipment created internally but not confirmed
+            yet. | | PROCESSED            | Shipment that was already informed
+            to the carrier and has the label ready to be printed. | |
+            IN_TRANSIT            | Shipment picked by carrier and in transit to
+            destination. |           | DELIVERED            | Shipment
+            delivered. |           "
+        status_changed_date:
+          type: string
+          format: date-time
+          description: Last date that shipment status changed
+        to:
+          $ref: "#/components/schemas/Address"
+        tracking:
+          type: array
+          description: List of TrackingEvents, each of one describes a change in shipment
+            status.
+          items:
+            $ref: "#/components/schemas/TrackingEvent"
+      title: ShipmentResponse
+      description: Description of a specific shipment. This specific Shipment class is used
+        to retrieve shipment information.
+    Sort:
+      type: object
+      properties:
+        sorted:
+          type: boolean
+        unsorted:
+          type: boolean
+      title: Sort
+    TrackingEvent:
+      type: object
+      required:
+        - external_status_code
+        - status
+        - status_changed_date
+      properties:
+        delivered_by:
+          type: string
+          example: JP
+          description: Carrier name
+        external_carrier_location:
+          type: string
+          example: "null"
+          description: Carrier location when status changed(???)
+        external_description:
+          type: string
+          example: WAITING FOR RAIDER
+          description: Information about status change that the Shipment API receives. It
+            is used to obtain the equivalent description in Shipment API
+        external_reason_code:
+          type: string
+          example: "null"
+          description: (???)
+        external_reason_description:
+          type: string
+          example: "null"
+          description: (???)
+        external_status_code:
+          type: string
+          example: 7
+          description: Shipping status code that the Shipment API receives. It is used to
+            obtain the equivalentshipping status in Shipment API.
+        status:
+          type: string
+          description: Current status(after change)
+        status_changed_date:
+          type: string
+          format: date-time
+          description: Date of status change.
+      title: TrackingEvent
+      description: Describes a change in shipping status
+    Page_ShipmentResponse_:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ShipmentResponse"
+        first:
+          type: boolean
+        last:
+          type: boolean
+        number:
+          type: integer
+          format: int32
+        numberOfElements:
+          type: integer
+          format: int32
+        pageable:
+          $ref: "#/components/schemas/Pageable"
+        size:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/Sort"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+      title: Page«ShipmentResponse»
